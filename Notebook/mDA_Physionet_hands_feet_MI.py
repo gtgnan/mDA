@@ -197,9 +197,14 @@ for subject in subjects:
     print(f"Processing raw data for subject {subject}")
     # ========================
     
-    raw_files = [
-        read_raw_edf(f, preload=True) for f in eegbci.load_data(subject, sessions)
-    ]
+    if args.download_path:
+        raw_files = [
+            read_raw_edf(f, preload=True) for f in eegbci.load_data(subject, sessions, path=args.download_path)
+        ]
+    else:
+        raw_files = [
+            read_raw_edf(f, preload=True) for f in eegbci.load_data(subject, sessions)
+        ]
     raw = concatenate_raws(raw_files)
 
     picks = pick_types(
