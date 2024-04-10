@@ -44,6 +44,7 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import FunctionTransformer
 
 import itertools
+import argparse
 
 set_log_level(verbose=False)
 
@@ -160,7 +161,15 @@ class ExchangeKFold:
 
     def get_n_splits(self, X, y, groups=None):
         return self.n_splits
-    
+
+# Create ArgumentParser object
+parser = argparse.ArgumentParser(description='Example script to demonstrate argparse usage.')
+
+# Add arguments
+parser.add_argument('--download_path', type=str, default=None, help='Download path (default to none).')
+# Parse the command-line arguments
+args = parser.parse_args()
+
 selected_events = None
 inconsistent_session = False
 dispersion_1 = 50
@@ -195,10 +204,10 @@ n_sessions = len(sessions)
 n_runs = len(runs)
 
 print(f"Loading subjects {subjects}...")
-my_path = "../mne_data"
-#dataset1.download(path=my_path)
-data = dataset1.get_data(subjects=subjects, cache_config={'path': my_path})
-#data = dataset1.get_data(subjects=subjects)
+if args.download_path:
+    data = dataset1.get_data(subjects=subjects, cache_config={'path': args.download_path})
+else:
+    data = dataset1.get_data(subjects=subjects)
 
 # ========================
 
