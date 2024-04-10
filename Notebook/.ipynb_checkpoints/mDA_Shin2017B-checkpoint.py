@@ -203,7 +203,7 @@ n_subjects = len(subjects)
 n_sessions = len(sessions)
 n_runs = len(runs)
 
-print(f"Loading subjects {subjects}...")
+print(f"Loading subjects {subjects} to {args.download_path}...")
 if args.download_path:
     data = dataset1.get_data(subjects=subjects, cache_config={'path': args.download_path})
 else:
