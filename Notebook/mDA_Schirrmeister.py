@@ -261,7 +261,7 @@ n_runs = len(runs)
 all_epochs = []
 all_labels = []
 
-epoch_path = "../epoch_data/Schirrmeister/""
+epoch_path = "../epoch_data/Schirrmeister/"
 
 for i, sub in enumerate(subjects):
     try:
