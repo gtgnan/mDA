@@ -68,7 +68,7 @@ from moabb.datasets import Shin2017A
 # ====================================
 
 dataset1 = Shin2017A(accept=True)
-subjects = [i+1 for i in range(29)] # 29
+subjects = [i+1 for i in range(3)] # 29
 sessions = ["0imagery", "2imagery", "4imagery"]
 runs = ['0']
 tmin, tmax = 1., 5.
@@ -170,12 +170,12 @@ for subject in subjects:
 
     shutil.rmtree(data_path)
 
-epoch_path = "../epoch_data/Shin2017A/"
+epoch_path = "../epoch_data/Shin2017A"
 
 # Check if the directory already exists
 if not os.path.exists(epoch_path):
-    # If it doesn't exist, create the directory
-    os.mkdir(epoch_path)
+    # Create the parent directory if it doesn't exist
+    os.makedirs(os.path.dirname(epoch_path), exist_ok=True)
     print(f"Directory '{epoch_path}' created successfully.")
 else:
     print(f"Directory '{epoch_path}' already exists.")

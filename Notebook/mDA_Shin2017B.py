@@ -11,6 +11,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import itertools as iter
 import scipy as sc
+import pickle as pk
 
 # mne import
 import mne
@@ -207,7 +208,7 @@ n_runs = len(runs)
 all_epochs = []
 all_labels = []
 
-epoch_path = "../epoch_data/Shin2017B/"
+epoch_path = "../epoch_data/Shin2017B"
 
 for i, sub in enumerate(subjects):
     try:
