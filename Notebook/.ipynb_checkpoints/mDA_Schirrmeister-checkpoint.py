@@ -1,10 +1,4 @@
-# !pip install mne
-# !pip install pyriemann
-# !pip install scikit-learn
-# !pip install moabb
-
 # generic import
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -22,7 +16,7 @@ from mne import set_log_level
 
 # pyriemann import
 import pyriemann
-from pyriemann.classification import MDM, FgMDM, TSclassifier, class_distinctiveness
+from pyriemann.classification import MDM, TSclassifier, class_distinctiveness
 from pyriemann.estimation import Covariances, Coherences
 from pyriemann.spatialfilters import CSP
 from pyriemann.tangentspace import TangentSpace
@@ -44,7 +38,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import FunctionTransformer
 
 import itertools
-import argparse
 
 set_log_level(verbose=False)
 
@@ -162,133 +155,127 @@ class ExchangeKFold:
     def get_n_splits(self, X, y, groups=None):
         return self.n_splits
 
-# Create ArgumentParser object
-parser = argparse.ArgumentParser(description='Example script to demonstrate argparse usage.')
+def ensemble_cross_val_score(clf, ppl_fc, X1, X2, y, cv):
+    n_classes = np.unique(y).shape[0]
+    X_stacked_train = np.empty((X1.shape[0], 2 * n_classes))
+    for train_idx, test_idx in cv.split(X1, y):
+        X1_train_fold, X1_test_fold = X1[train_idx], X1[test_idx]
+        X2_train_fold, X2_test_fold = X2[train_idx], X2[test_idx]
+        y_train_fold, y_test_fold = y[train_idx], y[test_idx]
 
-# Add arguments
-parser.add_argument('--download_path', type=str, default=None, help='Download path (default to none).')
-# Parse the command-line arguments
-args = parser.parse_args()
-    
+        # Fit the base models on the training fold
+        ppl_fc['cov'].fit(X1_train_fold, y_train_fold)
+        ppl_fc['instantaneous'].fit(X2_train_fold, y_train_fold)
+
+        # Make predictions on the validation fold
+        pred1 = ppl_fc['cov'].predict_proba(X1_test_fold)
+        pred2 = ppl_fc['instantaneous'].predict_proba(X2_test_fold)
+        
+        # Stack predictions on the validation fold
+        X_stacked_train[test_idx, :n_classes] = pred1
+        X_stacked_train[test_idx, n_classes:] = pred2
+        
+    # Fit the stacking classifier on the stacked predictions
+    clf.fit(X_stacked_train, y)
+
+    # Make predictions on the entire dataset for evaluation
+    pred_stacking = clf.predict(X_stacked_train)
+
+    # Evaluate the stacking classifier
+    return accuracy_score(y, pred_stacking)
+
+def ensemble_score(clf, ppl_fc, X1, X2, y, test_X1, test_X2, test_y):
+    n_classes = np.unique(y).shape[0]
+    X_stacked_train = np.empty((X1.shape[0], 2 * n_classes))
+    X_stacked_test = np.empty((test_X1.shape[0], 2 * n_classes))
+
+    # Fit the base models on the training fold
+    ppl_fc['cov'].fit(X1, y)
+    ppl_fc['instantaneous'].fit(X2, y)
+
+    # Make predictions on the validation fold
+    pred1 = ppl_fc['cov'].predict_proba(X1)
+    pred2 = ppl_fc['instantaneous'].predict_proba(X2)
+        
+    # Stack predictions on the validation fold
+    X_stacked_train[:, :n_classes] = pred1
+    X_stacked_train[:, n_classes:] = pred2
+
+    # Make predictions on the validation fold
+    pred1 = ppl_fc['cov'].predict_proba(test_X1)
+    pred2 = ppl_fc['instantaneous'].predict_proba(test_X2)
+        
+    # Stack predictions on the validation fold
+    X_stacked_test[:, :n_classes] = pred1
+    X_stacked_test[:, n_classes:] = pred2
+        
+    #y = np.concatenate((y, test_y))
+    # Fit the stacking classifier on the stacked predictions
+    clf.fit(X_stacked_train, y)
+
+    # Make predictions on the entire dataset for evaluation
+    pred_stacking = clf.predict(X_stacked_test)
+
+    # Evaluate the stacking classifier
+    return accuracy_score(test_y, pred_stacking)
+
+import pickle as pk
+
 selected_events = None
 inconsistent_session = False
+
+# ====================================
+# ======== Schirrmeister2017 =========
+# ====================================
+
+subjects = [i+1 for i in range(2)] # 14
+sessions = ["0"]
+runs = ["0train", "1test"]
+#runs = ["0train"]
+tmin, tmax = 1., 3.
+sample_step = 3 # chan = 128
 dispersion_1 = 50
-dispersion_2 = 500
+dispersion_2 = 1000
 dispersion_3 = 100
-# ========================
-
-from moabb.datasets import Shin2017A
-
-# ====================================
-# ============ Shin2017A =============
-# ====================================
-
-dataset1 = Shin2017A(accept=True)
-subjects = [i+1 for i in range(29)] # 29
-sessions = ["0imagery", "2imagery", "4imagery"]
-runs = ['0']
-tmin, tmax = 1., 5.
-sample_step = 1 # chan = 30
-dispersion_1 = 50
-dispersion_2 = 500
-dispersion_3 = 100
-
-# For Shin2017A
-# ori:  {'left_hand': 1, 'right_hand': 2}
-# set:  {'idle': 1, 'left_hand': 2, 'right_hand': 3}
-
-# ====================================
 
 n_subjects = len(subjects)
-n_sessions = len(sessions)
+n_sessions = [[320,480-320], # 1
+              [831,973-831], # 2
+              [880,1040-880], # 3
+              [897,1057-897], # 4
+              [720,880-720], # 5
+              [880,1040-880], # 6
+              [880,1040-880], # 7
+              [654,814-654], # 8
+              [880,1040-880], # 9
+              [880,1040-880], # 10
+              [880,1040-880], # 11
+              [880,1040-880], # 12
+              [800,960-800], # 13
+              [880,1040-880] # 14
+             ]
+
+n_subjects = len(subjects)
 n_runs = len(runs)
-
-print(f"Loading subjects {subjects}...")
-if args.download_path:
-    data = dataset1.get_data(subjects=subjects, cache_config={'path': args.download_path})
-else:
-    data = dataset1.get_data(subjects=subjects)
-
-# ========================
 
 all_epochs = []
 all_labels = []
 
-for subject in subjects:
-    print(f"Processing raw data for subject {subject}")
-    # ========================
-    
-    raw_files = [
-        data[subject][ses][run] for ses, run in iter.product(sessions, runs)
-    ]
-    raw = concatenate_raws(raw_files)
-        
-    picks = pick_types(
-        raw.info, meg=False, eeg=True, stim=False, eog=False, exclude='bads')
-    # subsample elecs
-    picks = picks[::sample_step]
+epoch_path = "./epoch_data"
 
-    # Apply band-pass filter
-    raw.filter(7., 35., method='iir', picks=picks)
+for i, sub in enumerate(subjects):
+    try:
+        with open(f"{epoch_path}/sch_{sub}_epoch.pkl", 'rb') as f:
+            all_epochs.append(pk.load(f))
+        with open(f"{epoch_path}/sch_{sub}_label.pkl", 'rb') as f:
+            all_labels.append(pk.load(f))
+    except:
+        print("Please execute mDA_Schirrmeister_preprocess.ipynb first.")
 
-    events, event_ids = mne.events_from_annotations(raw, event_id = selected_events)
-
-    # Reannotation
-    # Get the annotations
-    annotations = raw.annotations.copy()
-
-    # Loop through annotations to find trial onsets
-    for idx, annot in enumerate(raw.annotations):  # Iterate until the second to last annotation
-        # Create a new annotation for resting-state
-        if selected_events:
-            if raw.annotations[idx]['description'] not in selected_events:
-                continue
-        if raw.annotations[idx]['duration'] > 0:
-            duration = raw.annotations[idx]['duration']
-            duration = max(1, duration)
-            onset = annot['onset'] - duration
-            description = 'idle'
-
-            # Add this resting-state period as a new annotation
-            annotations.append(onset, duration, description)
-
-    # Update the annotations in the raw data
-    raw.set_annotations(annotations)
-
-    # Extract events including resting-state periods
-    if selected_events:
-        events, event_ids = mne.events_from_annotations(raw)
-        selected_events['idle'] = event_ids['idle']
-    events, event_ids = mne.events_from_annotations(raw, event_id = selected_events)
-    
-    # ========================
-
-    # Read epochs (train will be done only between 1 and 2s)
-    # Testing will be done with a running classifier
-    epochs = Epochs(
-        raw,
-        events,
-        None,
-        tmin,
-        tmax,
-        proj=True,
-        picks=picks,
-        baseline=None,
-        preload=True,
-        verbose=False)
-    labels = epochs.events[:, -1]
-
-    print("Shape of events: ", events.shape[0])
-    print("Shape of labels: ", labels.shape[0])
-    
-    all_epochs.append(epochs)
-    all_labels.append(labels)
-    
 # mDA main loop
 
-align_methods = ['rct-2+4', 'rct-2+4+8', 'rct-2', 'rct-4', 'rct-8', 'rct-20',
-                 'rpa-2+4', 'rpa-2+4+8', 'rpa-2', 'rpa-4', 'rpa-8', 'rpa-20']
-
+align_methods = ['rct-4+8', 'rct-4+8+16', 'rct-4', 'rct-8', 'rct-16', 'rct-2000',
+                 'rpa-4+8', 'rpa-4+8+16', 'rpa-4', 'rpa-8', 'rpa-16', 'rpa-2000']
 
 separability_scores = ['dis', 'fis', 'sil', 'db']        
 
@@ -338,7 +325,7 @@ for i, subject in enumerate(subjects):
             # compute covariance matrices
             conn = Covariances().transform(epochs_data)
         else:
-            conn = Coherences(coh=conn_type, fmin=7., fmax=35., fs=raw.info['sfreq']).transform(epochs_data)
+            conn = Coherences(coh=conn_type, fmin=7., fmax=35., fs=500.0).transform(epochs_data)
             conn = np.mean(conn, axis=-1, keepdims=False)
         
         conn = np.array(list(map(nearestPD, conn)))
@@ -346,10 +333,10 @@ for i, subject in enumerate(subjects):
         all_conn[conn_type].append(conn)
         trial_conn = conn[1::2]
     
-        #print(f"conn_type = {conn_type}\nconn.shape = {conn.shape}")
+        print(f"conn_type = {conn_type}\nconn.shape = {conn.shape}")
     
-        n_run_samples = conn.shape[0] // (n_sessions) // 2
-        session_cluster = np.repeat(np.array(np.arange(conn.shape[0]//n_run_samples // 2)), n_run_samples)
+        session_cluster = np.concatenate([np.repeat(np.array([j]), n) for j, n in enumerate(n_sessions[subject-1])])
+        print(session_cluster)
         
         # Align sessions/sub-sessions by recentering and stretching
         align_ind = 0
@@ -357,7 +344,7 @@ for i, subject in enumerate(subjects):
             
             window = m.split('-')[-1]
             if '+' in window:
-                #print("Multi-fold mDA with windows: ", window.split('+'))
+                print("Multi-fold mDA with windows: ", window.split('+'))
                 windows = list(map(int, window.split('+')))
                 X_centered_list = []
                 
@@ -380,7 +367,7 @@ for i, subject in enumerate(subjects):
                                 y.append(trial_labels[j])
                                 X.append(trial_conn[j])
                                 
-                    #print("Domain: ", domains)
+                    print("Domain: ", domains)
                     
                     X = np.array(X)
                     y = np.array(y)
@@ -400,17 +387,17 @@ for i, subject in enumerate(subjects):
                                                 for i_x in range(len(X_centered_list[0]))]))))
                             
             else:
-                #print("Single-fold mDA with window: ", window)
+                print("Single-fold mDA with window: ", window)
                 window = int(window)
                 
                 domains = []
                 y = []
                 X = []
-            
+
                 for c in np.unique(session_cluster):
                     index = np.where(session_cluster == c)[0]
 
-                    step = int(np.round(len(index) / window - 0.01))
+                    step = max(1, int(np.round(len(index) / window - 0.01)))
                     for start in range(step):
                         start_i = start*window
                         end_i = min(len(index),(start+1)*window)
@@ -420,8 +407,9 @@ for i, subject in enumerate(subjects):
                             domains.append(f'domain-{c}-{window}-{start}')
                             y.append(trial_labels[j])
                             X.append(trial_conn[j])
+                
 
-                #print("Domain: ", domains)
+                print("Domain: ", domains)
                 
                 X = np.array(X)
                 y = np.array(y)
@@ -454,7 +442,7 @@ for i, subject in enumerate(subjects):
 
             all_db_scores[conn_type][m].append(davies_bouldin_score(embeddings, y))
             all_db_scores_1[conn_type][m].append(davies_bouldin_score(embeddings_1, y))
-            
+
 # Classifier
 # MDM
 clf1 = MDM(metric=dict(mean='riemann', distance='riemann'))
