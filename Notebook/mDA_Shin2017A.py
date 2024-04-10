@@ -11,6 +11,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import itertools as iter
 import scipy as sc
+import pickle as pk
 
 # mne import
 import mne
@@ -184,7 +185,7 @@ from moabb.datasets import Shin2017A
 # ====================================
 
 dataset1 = Shin2017A(accept=True)
-subjects = [i+1 for i in range(29)] # 29
+subjects = [i+1 for i in range(3)] # 29
 sessions = ["0imagery", "2imagery", "4imagery"]
 runs = ['0']
 tmin, tmax = 1., 5.
@@ -210,6 +211,7 @@ all_labels = []
 epoch_path = "../epoch_data/Shin2017A"
 
 for i, sub in enumerate(subjects):
+    print(f"Load subject {sub}...")
     try:
         with open(f"{epoch_path}/sch_{sub}_epoch.pkl", 'rb') as f:
             all_epochs.append(pk.load(f))
