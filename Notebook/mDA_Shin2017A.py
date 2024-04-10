@@ -195,7 +195,7 @@ n_sessions = len(sessions)
 n_runs = len(runs)
 
 print(f"Loading subjects {subjects}...")
-my_path = "~/p-rs275-0/da_eeg/"
+my_path = "../mne_data"
 #dataset1.download(path=my_path)
 data = dataset1.get_data(subjects=subjects, cache_config={'path': my_path})
 #data = dataset1.get_data(subjects=subjects)
