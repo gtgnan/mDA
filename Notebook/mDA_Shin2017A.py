@@ -1,4 +1,10 @@
+# !pip install mne
+# !pip install pyriemann
+# !pip install scikit-learn
+# !pip install moabb
+
 # generic import
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -189,7 +195,10 @@ n_sessions = len(sessions)
 n_runs = len(runs)
 
 print(f"Loading subjects {subjects}...")
-data = dataset1.get_data(subjects=subjects)
+my_path = "~/p-rs275-0/da_eeg/"
+#dataset1.download(path=my_path)
+data = dataset1.get_data(subjects=subjects, cache_config={'path': my_path})
+#data = dataset1.get_data(subjects=subjects)
 
 # ========================
 
