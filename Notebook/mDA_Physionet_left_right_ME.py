@@ -199,7 +199,7 @@ for subject in subjects:
     
     if args.download_path:
         raw_files = [
-            read_raw_edf(f, preload=True) for f in eegbci.load_data(subject, sessions, path=args.download_path)
+            read_raw_edf(f, preload=True) for f in eegbci.load_data(subject, sessions, path=args.download_path, update_path=True)
         ]
     else:
         raw_files = [
