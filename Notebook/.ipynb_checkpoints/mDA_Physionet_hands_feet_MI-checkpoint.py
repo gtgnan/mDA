@@ -182,7 +182,11 @@ dispersion_3 = 100
 tmin, tmax = 1., 2.
 
 sample_step = 2 # chan = 64
-subjects = np.arange(109) + 1 # 109 for all subjects
+subjects = list(range(1, 110)) # 109 for all subjects
+# Remove subjects that causes NaN error or annotation error
+for s in [21, 53, 104, 106]:
+    subjects.remove(s)
+subjects = np.array(subjects)
 
 # for hands/feet MI
 sessions = [6, 10, 14]
