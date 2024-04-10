@@ -1,3 +1,4 @@
 epoch_data/
+mne_data/
 *.sbatch
 *.output
