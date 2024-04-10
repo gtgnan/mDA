@@ -63,21 +63,25 @@ inconsistent_session = False
 
 # ========================
 
-from moabb.datasets import Schirrmeister2017
+from moabb.datasets import BNCI2015_004
 
 # ====================================
-# ======== Schirrmeister2017 =========
+# ============ BNCI2015_004 ==========
 # ====================================
 
-dataset1 = Schirrmeister2017()
-subjects = [i+1 for i in range(14)] # 14
-sessions = ["0"]
-runs = ["0train", "1test"]
-tmin, tmax = 1., 3.
-sample_step = 3 # chan = 128
+dataset1 = BNCI2015_004()
+subjects = [i+1 for i in range(9)] # 9
+sessions = ["0", "1"]
+runs = ['0']
+tmin, tmax = 1., 5.
+sample_step = 1 # chan = 30
 dispersion_1 = 50
-dispersion_2 = 1000
+dispersion_2 = 500
 dispersion_3 = 100
+
+# For Shin2017A
+# ori:  {'left_hand': 1, 'right_hand': 2}
+# set:  {'idle': 1, 'left_hand': 2, 'right_hand': 3}
 
 # ====================================
 
@@ -168,7 +172,7 @@ for subject in subjects:
 
     shutil.rmtree(data_path)
 
-epoch_path = "../epoch_data/Schirrmeister/"
+epoch_path = "../epoch_data/BNCI/"
 
 # Check if the directory already exists
 if not os.path.exists(epoch_path):
@@ -184,4 +188,4 @@ for i, sub in enumerate(subjects):
     with open(f"{epoch_path}/sch_{sub}_label.pkl", 'wb') as f:
         pk.dump(all_labels[i], f)
 
-print("Save epoched data to epoch_data. Execute mDA_Schirrmeister.ipynb to show the analysis.")
+print("Save epoched data to epoch_data. Execute mDA_BNCI.ipynb to show the analysis.")

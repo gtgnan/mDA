@@ -61,23 +61,25 @@ set_log_level(verbose=False)
 selected_events = None
 inconsistent_session = False
 
-# ========================
-
-from moabb.datasets import Schirrmeister2017
+from moabb.datasets import Shin2017A
 
 # ====================================
-# ======== Schirrmeister2017 =========
+# ============ Shin2017A =============
 # ====================================
 
-dataset1 = Schirrmeister2017()
-subjects = [i+1 for i in range(14)] # 14
-sessions = ["0"]
-runs = ["0train", "1test"]
-tmin, tmax = 1., 3.
-sample_step = 3 # chan = 128
+dataset1 = Shin2017A(accept=True)
+subjects = [i+1 for i in range(29)] # 29
+sessions = ["0imagery", "2imagery", "4imagery"]
+runs = ['0']
+tmin, tmax = 1., 5.
+sample_step = 1 # chan = 30
 dispersion_1 = 50
-dispersion_2 = 1000
+dispersion_2 = 500
 dispersion_3 = 100
+
+# For Shin2017A
+# ori:  {'left_hand': 1, 'right_hand': 2}
+# set:  {'idle': 1, 'left_hand': 2, 'right_hand': 3}
 
 # ====================================
 
@@ -168,7 +170,7 @@ for subject in subjects:
 
     shutil.rmtree(data_path)
 
-epoch_path = "../epoch_data/Schirrmeister/"
+epoch_path = "../epoch_data/Shin2017A/"
 
 # Check if the directory already exists
 if not os.path.exists(epoch_path):

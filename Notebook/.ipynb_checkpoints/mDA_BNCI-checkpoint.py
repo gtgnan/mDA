@@ -204,86 +204,21 @@ n_subjects = len(subjects)
 n_sessions = len(sessions)
 n_runs = len(runs)
 
-print(f"Loading subjects {subjects} to {args.download_path}...")
-if args.download_path:
-    data = dataset1.get_data(subjects=subjects, cache_config=CacheConfig.make({'path': args.download_path}))
-else:
-    data = dataset1.get_data(subjects=subjects)
-
 # ========================
 
 all_epochs = []
 all_labels = []
 
-for subject in subjects:
-    print(f"Processing raw data for subject {subject}")
-    # ========================
-    
-    raw_files = [
-        data[subject][ses][run] for ses, run in iter.product(sessions, runs)
-    ]
-    raw = concatenate_raws(raw_files)
-        
-    picks = pick_types(
-        raw.info, meg=False, eeg=True, stim=False, eog=False, exclude='bads')
-    # subsample elecs
-    picks = picks[::sample_step]
+epoch_path = "../epoch_data/BNCI/"
 
-    # Apply band-pass filter
-    raw.filter(7., 35., method='iir', picks=picks)
-
-    events, event_ids = mne.events_from_annotations(raw, event_id = selected_events)
-
-    # Reannotation
-    # Get the annotations
-    annotations = raw.annotations.copy()
-
-    # Loop through annotations to find trial onsets
-    for idx, annot in enumerate(raw.annotations):  # Iterate until the second to last annotation
-        # Create a new annotation for resting-state
-        if selected_events:
-            if raw.annotations[idx]['description'] not in selected_events:
-                continue
-        if raw.annotations[idx]['duration'] > 0:
-            duration = raw.annotations[idx]['duration']
-            duration = max(1, duration)
-            onset = annot['onset'] - duration
-            description = 'idle'
-
-            # Add this resting-state period as a new annotation
-            annotations.append(onset, duration, description)
-
-    # Update the annotations in the raw data
-    raw.set_annotations(annotations)
-
-    # Extract events including resting-state periods
-    if selected_events:
-        events, event_ids = mne.events_from_annotations(raw)
-        selected_events['idle'] = event_ids['idle']
-    events, event_ids = mne.events_from_annotations(raw, event_id = selected_events)
-    
-    # ========================
-
-    # Read epochs (train will be done only between 1 and 2s)
-    # Testing will be done with a running classifier
-    epochs = Epochs(
-        raw,
-        events,
-        None,
-        tmin,
-        tmax,
-        proj=True,
-        picks=picks,
-        baseline=None,
-        preload=True,
-        verbose=False)
-    labels = epochs.events[:, -1]
-
-    print("Shape of events: ", events.shape[0])
-    print("Shape of labels: ", labels.shape[0])
-    
-    all_epochs.append(epochs)
-    all_labels.append(labels)
+for i, sub in enumerate(subjects):
+    try:
+        with open(f"{epoch_path}/sch_{sub}_epoch.pkl", 'rb') as f:
+            all_epochs.append(pk.load(f))
+        with open(f"{epoch_path}/sch_{sub}_label.pkl", 'rb') as f:
+            all_labels.append(pk.load(f))
+    except:
+        print("Please execute mDA_BNCI_preprocess.ipynb first.")
     
 # mDA main loop
 
