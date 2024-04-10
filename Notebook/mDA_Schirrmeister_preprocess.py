@@ -164,7 +164,7 @@ for subject in subjects:
 
     os.rmdir("~/mne_data/")
 
-epoch_path = "../epoch_data"
+epoch_path = "../epoch_data/Schirrmeister/"
 
 # Check if the directory already exists
 if not os.path.exists(epoch_path):
