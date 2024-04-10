@@ -178,6 +178,7 @@ dispersion_3 = 100
 # ========================
 
 from moabb.datasets import Shin2017A
+from moabb.datasets.base import CacheConfig
 
 # ====================================
 # ============ Shin2017A =============

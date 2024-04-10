@@ -178,6 +178,7 @@ dispersion_3 = 100
 # ========================
 
 from moabb.datasets import BNCI2015_004
+from moabb.datasets.base import CacheConfig
 
 # ====================================
 # ============ BNCI2015_004 ==========

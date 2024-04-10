@@ -178,6 +178,7 @@ dispersion_3 = 100
 # ========================
 
 from moabb.datasets import Shin2017B
+from moabb.datasets.base import CacheConfig
 
 # ====================================
 # ============ Shin2017B =============
@@ -205,7 +206,7 @@ n_runs = len(runs)
 
 print(f"Loading subjects {subjects} to {args.download_path}...")
 if args.download_path:
-    data = dataset1.get_data(subjects=subjects, cache_config={'path': args.download_path})
+    data = dataset1.get_data(subjects=subjects, cache_config=CacheConfig.make({'path': args.download_path}))
 else:
     data = dataset1.get_data(subjects=subjects)
 
