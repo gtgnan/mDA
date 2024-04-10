@@ -2,6 +2,7 @@
 import numpy as np
 import itertools as iter
 import os
+import shutil
 
 # mne import
 import mne
@@ -88,9 +89,12 @@ n_runs = len(runs)
 
 all_epochs = []
 all_labels = []
+data_path = os.path.expanduser('~/mne_data/')
 
 for subject in subjects:
-    print(f"Loading subjects {subjects}...")
+    if not os.path.exists(data_path):
+        os.mkdir(data_path)
+    print(f"Loading subjects {subject}...")
     data = dataset1.get_data(subjects=[subject])
 
     print(f"Processing raw data for subject {subject}")
@@ -162,7 +166,7 @@ for subject in subjects:
     all_epochs.append(epochs)
     all_labels.append(labels)
 
-    os.rmdir("~/mne_data/")
+    shutil.rmtree(data_path)
 
 epoch_path = "../epoch_data"
 
