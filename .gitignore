@@ -1,4 +1,5 @@
 epoch_data/
 mne_data/
+mne-data/
 *.sbatch
 *.out
