@@ -228,7 +228,7 @@ inconsistent_session = False
 # ======== Schirrmeister2017 =========
 # ====================================
 
-subjects = [i+1 for i in range(2)] # 14
+subjects = [i+1 for i in range(14)] # 14
 sessions = ["0"]
 runs = ["0train", "1test"]
 #runs = ["0train"]
@@ -261,7 +261,7 @@ n_runs = len(runs)
 all_epochs = []
 all_labels = []
 
-epoch_path = "./epoch_data"
+epoch_path = "../epoch_data/Schirrmeister/"
 
 for i, sub in enumerate(subjects):
     try:
@@ -274,8 +274,9 @@ for i, sub in enumerate(subjects):
 
 # mDA main loop
 
-align_methods = ['rct-4+8', 'rct-4+8+16', 'rct-4', 'rct-8', 'rct-16', 'rct-2000',
-                 'rpa-4+8', 'rpa-4+8+16', 'rpa-4', 'rpa-8', 'rpa-16', 'rpa-2000']
+#align_methods = ['rct-4+8', 'rct-4+8+16', 'rct-4', 'rct-8', 'rct-16', 'rct-2000',
+#                 'rpa-4+8', 'rpa-4+8+16', 'rpa-4', 'rpa-8', 'rpa-16', 'rpa-2000']
+align_methods = ['rpa-4', 'rpa-2000']
 
 separability_scores = ['dis', 'fis', 'sil', 'db']        
 
@@ -497,12 +498,12 @@ clf5 = Pipeline([('lr', LogisticRegression(**param_lr))])
 # n-fold cross-validation where n is the number of subject in the dataset
 #cv = KFold(n_splits=n_subjects, shuffle=False)
 
-cv_list = {"cross-session": KFold(n_splits=n_sessions, shuffle=False),
-           "within-subject": KFold(n_splits=5, shuffle=True, random_state=42),
-           "cross-subject": KFold(n_splits=n_subjects, shuffle=False),
+cv_list = {"within-subject": KFold(n_splits=5, shuffle=True, random_state=42),
+           "cross-session": KFold(n_splits=n_sessions, shuffle=False),
+           "cross-subject": KFold(n_splits=n_subjects, shuffle=False)
           }
 
-decoding_algo = ['mdm', 'tslr', 'csp+lr', 'csp+optsvm', 'fucone', 'fgmdm']
+decoding_algo = ['mdm', 'fgmdm', 'csp+lr', 'csp+optsvm', 'tslr', 'fucone']
 
 overall_acc = {s: {m: {algo: [] for algo in decoding_algo}
                for m in align_methods} for s in cv_list}
@@ -511,7 +512,7 @@ for scenario, cv in cv_list.items():
     for i, subject in enumerate(subjects):
         print(f"Classifying subject {subject} under {scenario} scenario...")
         
-        if "sub" in scenario:
+        if "cross-subject" in scenario:
             if i > 0:
                 print("No need to loop for cross-subject")
                 break
@@ -524,7 +525,7 @@ for scenario, cv in cv_list.items():
 
         for j, m in enumerate(align_methods):
             print(f'Method: {m}')
-            if "sub" not in scenario:
+            if "cross-subject" not in scenario:
                 X1 = all_align_conn['cov'][m][i]
                 X2 = all_align_conn['instantaneous'][m][i]
                 y = all_align_label['cov'][m][i]
@@ -568,8 +569,9 @@ for scenario in cv_list.keys():
         fig, ax = plt.subplots(figsize=(5, 3))
         ax.boxplot(x=[overall_acc[scenario][m][algo] for m in align_methods[:]], 
                    showmeans=True, showfliers=False, vert=False)
-        ax.set_yticklabels(['mRCT-{2,4}', 'mRCT-{2,4,8}', 'mRCT-{2}', 'mRCT-{4}', 'mRCT-{8}', 'RCT',
-                            'mRPA-{2,4}', 'mRPA-{2,4,8}', 'mRPA-{2}', 'mRPA-{4}', 'mRPA-{8}', 'RPA'], fontsize=12)
+        #ax.set_yticklabels(['mRCT-{4,8}', 'mRCT-{4,8,16}', 'mRCT-{4}', 'mRCT-{8}', 'mRCT-{16}', 'RCT',
+        #                    'mRPA-{4,8}', 'mRPA-{4,8,16}', 'mRPA-{4}', 'mRPA-{8}', 'mRPA-{16}', 'RPA'], fontsize=12)
+        ax.set_yticklabels(['mRPA-{4}', 'RPA'], fontsize=12)
         ax.set_xlabel('Classification accuracy', fontsize=12)
         plt.grid()
         plt.savefig(f"w_k_{scenario}_{algo}.pdf", bbox_inches='tight')

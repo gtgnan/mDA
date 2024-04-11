@@ -194,6 +194,8 @@ dispersion_1 = 50
 dispersion_2 = 500
 dispersion_3 = 100
 
+subjects.remove(4) # remove for wrong annotation
+
 # For Shin2017A
 # ori:  {'left_hand': 1, 'right_hand': 2}
 # set:  {'idle': 1, 'left_hand': 2, 'right_hand': 3}
@@ -222,9 +224,9 @@ for i, sub in enumerate(subjects):
     
 # mDA main loop
 
-align_methods = ['rct-2+4', 'rct-2+4+8', 'rct-2', 'rct-4', 'rct-8', 'rct-20',
-                 'rpa-2+4', 'rpa-2+4+8', 'rpa-2', 'rpa-4', 'rpa-8', 'rpa-20']
-
+#align_methods = ['rct-10+40', 'rct-10+40+80', 'rct-10', 'rct-40', 'rct-80', 'rct-200',
+#                 'rpa-10+40', 'rpa-10+40+80', 'rpa-10', 'rpa-40', 'rpa-80', 'rpa-200']
+align_methods = ['rpa-10+40', 'rpa-5', 'rpa-200']
 
 separability_scores = ['dis', 'fis', 'sil', 'db']        
 
@@ -445,12 +447,12 @@ clf5 = Pipeline([('lr', LogisticRegression(**param_lr))])
 # n-fold cross-validation where n is the number of subject in the dataset
 #cv = KFold(n_splits=n_subjects, shuffle=False)
 
-cv_list = {"cross-session": KFold(n_splits=n_sessions, shuffle=False),
-           "within-subject": KFold(n_splits=5, shuffle=True, random_state=42),
-           "cross-subject": KFold(n_splits=n_subjects, shuffle=False),
+cv_list = {"within-subject": KFold(n_splits=5, shuffle=True, random_state=42),
+           "cross-session": KFold(n_splits=n_sessions, shuffle=False),
+           "cross-subject": KFold(n_splits=n_subjects, shuffle=False)
           }
 
-decoding_algo = ['mdm', 'tslr', 'csp+lr', 'csp+optsvm', 'fucone', 'fgmdm']
+decoding_algo = ['mdm', 'fgmdm', 'csp+lr', 'csp+optsvm', 'tslr', 'fucone']
 
 overall_acc = {s: {m: {algo: [] for algo in decoding_algo}
                for m in align_methods} for s in cv_list}
@@ -459,7 +461,7 @@ for scenario, cv in cv_list.items():
     for i, subject in enumerate(subjects):
         print(f"Classifying subject {subject} under {scenario} scenario...")
         
-        if "sub" in scenario:
+        if "cross-subject" in scenario:
             if i > 0:
                 print("No need to loop for cross-subject")
                 break
@@ -472,7 +474,7 @@ for scenario, cv in cv_list.items():
 
         for j, m in enumerate(align_methods):
             print(f'Method: {m}')
-            if "sub" not in scenario:
+            if "cross-subject" not in scenario:
                 X1 = all_align_conn['cov'][m][i]
                 X2 = all_align_conn['instantaneous'][m][i]
                 y = all_align_label['cov'][m][i]
@@ -516,8 +518,9 @@ for scenario in cv_list.keys():
         fig, ax = plt.subplots(figsize=(5, 3))
         ax.boxplot(x=[overall_acc[scenario][m][algo] for m in align_methods[:]], 
                    showmeans=True, showfliers=False, vert=False)
-        ax.set_yticklabels(['mRCT-{2,4}', 'mRCT-{2,4,8}', 'mRCT-{2}', 'mRCT-{4}', 'mRCT-{8}', 'RCT',
-                            'mRPA-{2,4}', 'mRPA-{2,4,8}', 'mRPA-{2}', 'mRPA-{4}', 'mRPA-{8}', 'RPA'], fontsize=12)
+        #ax.set_yticklabels(['mRCT-{10,40}', 'mRCT-{10,40,80}', 'mRCT-{10}', 'mRCT-{40}', 'mRCT-{80}', 'RCT',
+        #                    'mRPA-{10,40}', 'mRPA-{10,40,80}', 'mRPA-{10}', 'mRPA-{40}', 'mRPA-{80}', 'RPA'], fontsize=12)
+        ax.set_yticklabels(['mRPA-{10,40}', 'mRCT-{5}', 'RPA'], fontsize=12)
         ax.set_xlabel('Classification accuracy', fontsize=12)
         plt.grid()
         plt.savefig(f"w_k_{scenario}_{algo}.pdf", bbox_inches='tight')
