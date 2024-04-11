@@ -185,7 +185,7 @@ from moabb.datasets import Shin2017A
 # ====================================
 
 dataset1 = Shin2017A(accept=True)
-subjects = [i+1 for i in range(3)] # 29
+subjects = [i+1 for i in range(29)] # 29
 sessions = ["0imagery", "2imagery", "4imagery"]
 runs = ['0']
 tmin, tmax = 1., 5.
@@ -274,7 +274,7 @@ for i, subject in enumerate(subjects):
             # compute covariance matrices
             conn = Covariances().transform(epochs_data)
         else:
-            conn = Coherences(coh=conn_type, fmin=7., fmax=35., fs=raw.info['sfreq']).transform(epochs_data)
+            conn = Coherences(coh=conn_type, fmin=7., fmax=35., fs=200.0).transform(epochs_data)
             conn = np.mean(conn, axis=-1, keepdims=False)
         
         conn = np.array(list(map(nearestPD, conn)))

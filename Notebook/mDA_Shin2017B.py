@@ -273,7 +273,7 @@ for i, subject in enumerate(subjects):
             # compute covariance matrices
             conn = Covariances().transform(epochs_data)
         else:
-            conn = Coherences(coh=conn_type, fmin=7., fmax=35., fs=raw.info['sfreq']).transform(epochs_data)
+            conn = Coherences(coh=conn_type, fmin=7., fmax=35., fs=200.0).transform(epochs_data)
             conn = np.mean(conn, axis=-1, keepdims=False)
         
         conn = np.array(list(map(nearestPD, conn)))

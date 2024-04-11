@@ -68,7 +68,7 @@ from moabb.datasets import Shin2017A
 # ====================================
 
 dataset1 = Shin2017A(accept=True)
-subjects = [i+1 for i in range(3)] # 29
+subjects = [i+1 for i in range(29)] # 29
 sessions = ["0imagery", "2imagery", "4imagery"]
 runs = ['0']
 tmin, tmax = 1., 5.
