@@ -195,6 +195,7 @@ dispersion_2 = 500
 dispersion_3 = 100
 
 subjects.remove(4) # remove for wrong annotation
+subjects.remove(7) # remove for wrong annotation
 
 # For Shin2017A
 # ori:  {'left_hand': 1, 'right_hand': 2}
