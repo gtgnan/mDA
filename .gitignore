@@ -3,3 +3,4 @@ mne_data/
 mne-data/
 *.sbatch
 *.out
+*.pdf
