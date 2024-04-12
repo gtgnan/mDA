@@ -16,7 +16,7 @@ from mne import set_log_level
 
 # pyriemann import
 import pyriemann
-from pyriemann.classification import MDM, TSclassifier, class_distinctiveness
+from pyriemann.classification import MDM, FgMDM, TSclassifier, class_distinctiveness
 from pyriemann.estimation import Covariances, Coherences
 from pyriemann.spatialfilters import CSP
 from pyriemann.tangentspace import TangentSpace
