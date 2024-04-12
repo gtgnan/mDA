@@ -498,9 +498,10 @@ clf5 = Pipeline([('lr', LogisticRegression(**param_lr))])
 # n-fold cross-validation where n is the number of subject in the dataset
 #cv = KFold(n_splits=n_subjects, shuffle=False)
 
-cv_list = {"within-subject": KFold(n_splits=5, shuffle=True, random_state=42),
-           "cross-session": KFold(n_splits=n_sessions, shuffle=False),
-           "cross-subject": KFold(n_splits=n_subjects, shuffle=False)
+cv_list = {
+           "cross-session": None,
+           "within-subject": KFold(n_splits=5, shuffle=True, random_state=42),
+           "cross-subject": None
           }
 
 decoding_algo = ['mdm', 'fgmdm', 'csp+lr', 'csp+optsvm', 'tslr', 'fucone']
@@ -510,9 +511,9 @@ overall_acc = {s: {m: {algo: [] for algo in decoding_algo}
 
 for scenario, cv in cv_list.items():
     for i, subject in enumerate(subjects):
-        print(f"Classifying subject {subject} under {scenario} scenario...")
+        print(f"Classifying subject {subject} under scenario {scenario}...")
         
-        if "cross-subject" in scenario:
+        if scenario == "cross-subject":
             if i > 0:
                 print("No need to loop for cross-subject")
                 break
@@ -523,34 +524,83 @@ for scenario, cv in cv_list.items():
         class_balance = np.mean(all_labels[i][1::2] == all_labels[i][1::2][0])
         class_balance = max(class_balance, 1. - class_balance)
 
-        for j, m in enumerate(align_methods):
-            print(f'Method: {m}')
-            if "cross-subject" not in scenario:
+        if scenario == "within-subject":
+            for j, m in enumerate(align_methods):
+                print(f'Method: {m}')
+                
                 X1 = all_align_conn['cov'][m][i]
                 X2 = all_align_conn['instantaneous'][m][i]
                 y = all_align_label['cov'][m][i]
-            else:
-                X1 = np.concatenate([all_align_conn['cov'][m][s] for s in range(len(subjects))])
-                X2 = np.concatenate([all_align_conn['instantaneous'][m][s] for s in range(len(subjects))])
-                y = np.concatenate([all_align_label['cov'][m][s] for s in range(len(subjects))])
-
-            # Use scikit-learn Pipeline with cross_val_score function
-            scores1 = cross_val_score(clf1, X1, y, cv=cv, n_jobs=1)
-            scores2 = cross_val_score(clf2, X1, y, cv=cv, n_jobs=1)
-            scores3 = cross_val_score(clf3, X1, y, cv=cv, n_jobs=1)
-            scores4 = cross_val_score(clf4, X1, y, cv=cv, n_jobs=1)
-            scores5 = ensemble_cross_val_score(clf5, ppl_fc, X1, X2, y, cv)
-            scores6 = cross_val_score(clf6, X1, y, cv=cv, n_jobs=1)
-
-            overall_acc[scenario][m]['mdm'].append(np.mean(scores1))
-            overall_acc[scenario][m]['tslr'].append(np.mean(scores2))
-            overall_acc[scenario][m]['csp+lr'].append(np.mean(scores3))
-            overall_acc[scenario][m]['csp+optsvm'].append(np.mean(scores4))
-            overall_acc[scenario][m]['fucone'].append(np.mean(scores5))
-            overall_acc[scenario][m]['fgmdm'].append(np.mean(scores6))
-
-            # Print the results
-            print(f"Classification accuracy: {np.mean(scores1):.4f} / {np.mean(scores2):.4f} / {np.mean(scores3):.4f} / {np.mean(scores4):.4f} / {np.mean(scores5):.4f} / {np.mean(scores6):.4f}, Chance level: {class_balance:.4f}")
+    
+                # Use scikit-learn Pipeline with cross_val_score function
+                scores1 = cross_val_score(clf1, X1, y, cv=cv, n_jobs=1)
+                scores2 = cross_val_score(clf2, X1, y, cv=cv, n_jobs=1)
+                scores3 = cross_val_score(clf3, X1, y, cv=cv, n_jobs=1)
+                scores4 = cross_val_score(clf4, X1, y, cv=cv, n_jobs=1)
+                scores5 = ensemble_cross_val_score(clf5, ppl_fc, X1, X2, y, cv)
+                scores6 = cross_val_score(clf6, X1, y, cv=cv, n_jobs=1)
+    
+                overall_acc[scenario][m]['mdm'].append(np.mean(scores1))
+                overall_acc[scenario][m]['tslr'].append(np.mean(scores2))
+                overall_acc[scenario][m]['csp+lr'].append(np.mean(scores3))
+                overall_acc[scenario][m]['csp+optsvm'].append(np.mean(scores4))
+                overall_acc[scenario][m]['fucone'].append(np.mean(scores5))
+                overall_acc[scenario][m]['fgmdm'].append(np.mean(scores6))
+                # Print the results
+                print(f"Classification accuracy: {np.mean(scores1):.4f} / {np.mean(scores2):.4f} / {np.mean(scores3):.4f} / {np.mean(scores4):.4f} / {np.mean(scores5):.4f}, Chance level: {class_balance:.4f}")
+                
+        elif scenario == "cross-session":
+            for j, m in enumerate(align_methods):
+                print(f'Method: {m}')
+                train_X1 = all_align_conn['cov'][m][i][:n_sessions[i][0]]
+                test_X1 = all_align_conn['cov'][m][i][n_sessions[i][0]:]
+                train_X2 = all_align_conn['instantaneous'][m][i][:n_sessions[i][0]]
+                test_X2 = all_align_conn['instantaneous'][m][i][n_sessions[i][0]:]
+                train_y = all_align_label['cov'][m][i][:n_sessions[i][0]]
+                test_y = all_align_label['cov'][m][i][n_sessions[i][0]:]
+                
+                scores1 = clf1.fit(train_X1, train_y).score(test_X1, test_y)
+                scores2 = clf2.fit(train_X1, train_y).score(test_X1, test_y)
+                scores3 = clf3.fit(train_X1, train_y).score(test_X1, test_y)
+                scores4 = clf4.fit(train_X1, train_y).score(test_X1, test_y)
+                scores5 = ensemble_score(clf5, ppl_fc, train_X1, train_X2, train_y, test_X1, test_X2, test_y)
+                scores6 = clf6.fit(train_X1, train_y).score(test_X1, test_y)
+    
+                overall_acc[scenario][m]['mdm'].append(np.mean(scores1))
+                overall_acc[scenario][m]['tslr'].append(np.mean(scores2))
+                overall_acc[scenario][m]['csp+lr'].append(np.mean(scores3))
+                overall_acc[scenario][m]['csp+optsvm'].append(np.mean(scores4))
+                overall_acc[scenario][m]['fucone'].append(np.mean(scores5))
+                overall_acc[scenario][m]['fgmdm'].append(np.mean(scores6))
+    
+                print(f"Classification accuracy: {np.mean(scores2):.4f} / {np.mean(scores5):.4f}, Chance level: {class_balance:.4f}")
+        
+        else:
+            for j, m in enumerate(align_methods):
+                print(f'Method: {m}')
+                for iite, ss in enumerate(subjects):
+                    train_X1 = np.concatenate([all_align_conn['cov'][m][ite] for ite, s in enumerate(subjects) if s != ss])
+                    test_X1 = all_align_conn['cov'][m][iite]
+                    train_X2 = np.concatenate([all_align_conn['instantaneous'][m][ite] for ite, s in enumerate(subjects) if s != ss])
+                    test_X2 = all_align_conn['instantaneous'][m][iite]
+                    train_y = np.concatenate([all_align_label['cov'][m][ite] for ite, s in enumerate(subjects) if s != ss])
+                    test_y = all_align_label['cov'][m][iite]
+    
+                    scores1 = clf1.fit(train_X1, train_y).score(test_X1, test_y)
+                    scores2 = clf2.fit(train_X1, train_y).score(test_X1, test_y)
+                    scores3 = clf3.fit(train_X1, train_y).score(test_X1, test_y)
+                    scores4 = clf4.fit(train_X1, train_y).score(test_X1, test_y)
+                    scores5 = ensemble_score(clf5, ppl_fc, train_X1, train_X2, train_y, test_X1, test_X2, test_y)
+                    scores6 = clf6.fit(train_X1, train_y).score(test_X1, test_y)
+        
+                    overall_acc[scenario][m]['mdm'].append(np.mean(scores1))
+                    overall_acc[scenario][m]['tslr'].append(np.mean(scores2))
+                    overall_acc[scenario][m]['csp+lr'].append(np.mean(scores3))
+                    overall_acc[scenario][m]['csp+optsvm'].append(np.mean(scores4))
+                    overall_acc[scenario][m]['fucone'].append(np.mean(scores5))
+                    overall_acc[scenario][m]['fgmdm'].append(np.mean(scores6))
+        
+                    print(f"Classification accuracy: {np.mean(scores2):.4f} / {np.mean(scores5):.4f}, Chance level: {class_balance:.4f}")
             
 print("Subject: ", subjects)
 print("Session: ", sessions)
