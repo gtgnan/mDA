@@ -184,7 +184,7 @@ tmin, tmax = 1., 2.
 sample_step = 2 # chan = 64
 subjects = list(range(1, 110)) # 109 for all subjects
 # Remove subjects that causes NaN error or annotation error
-for s in [21, 53, 104, 106]:
+for s in [21, 53, 56, 89, 104, 106]:
     subjects.remove(s)
 subjects = np.array(subjects)
 
