@@ -246,7 +246,10 @@ for subject in subjects:
     
 # mDA main loop
 
-align_methods = ['rpa-2', 'rpa-20']
+#align_methods = ['rct-2+4', 'rct-2+4+8', 'rct-2', 'rct-4', 'rct-8', 'rct-20',
+#                 'rpa-2+4', 'rpa-2+4+8', 'rpa-2', 'rpa-4', 'rpa-8', 'rpa-20']
+#align_methods = ['rpa-2', 'rpa-20']
+align_methods = ['rpa-2', 'rpa-3', 'rpa-4', 'rpa-5', 'rpa-6', 'rpa-7', 'rpa-8', 'rpa-20']
 
 
 separability_scores = ['dis', 'fis', 'sil', 'db']        
@@ -473,7 +476,8 @@ cv_list = {"within-subject": KFold(n_splits=5, shuffle=True, random_state=42),
            "cross-subject": KFold(n_splits=n_subjects, shuffle=False)
           }
 
-decoding_algo = ['mdm', 'fgmdm', 'csp+lr', 'csp+optsvm', 'tslr', 'fucone']
+#decoding_algo = ['mdm', 'fgmdm', 'csp+lr', 'csp+optsvm', 'tslr', 'fucone']
+decoding_algo = ['tslr', 'fucone']
 
 overall_acc = {s: {m: {algo: [] for algo in decoding_algo}
                for m in align_methods} for s in cv_list}
@@ -505,22 +509,22 @@ for scenario, cv in cv_list.items():
                 y = np.concatenate([all_align_label['cov'][m][s] for s in range(len(subjects))])
 
             # Use scikit-learn Pipeline with cross_val_score function
-            scores1 = cross_val_score(clf1, X1, y, cv=cv, n_jobs=1)
+            #scores1 = cross_val_score(clf1, X1, y, cv=cv, n_jobs=1)
             scores2 = cross_val_score(clf2, X1, y, cv=cv, n_jobs=1)
-            scores3 = cross_val_score(clf3, X1, y, cv=cv, n_jobs=1)
-            scores4 = cross_val_score(clf4, X1, y, cv=cv, n_jobs=1)
+            #scores3 = cross_val_score(clf3, X1, y, cv=cv, n_jobs=1)
+            #scores4 = cross_val_score(clf4, X1, y, cv=cv, n_jobs=1)
             scores5 = ensemble_cross_val_score(clf5, ppl_fc, X1, X2, y, cv)
-            scores6 = cross_val_score(clf6, X1, y, cv=cv, n_jobs=1)
+            #scores6 = cross_val_score(clf6, X1, y, cv=cv, n_jobs=1)
 
-            overall_acc[scenario][m]['mdm'].append(np.mean(scores1))
+            #overall_acc[scenario][m]['mdm'].append(np.mean(scores1))
             overall_acc[scenario][m]['tslr'].append(np.mean(scores2))
-            overall_acc[scenario][m]['csp+lr'].append(np.mean(scores3))
-            overall_acc[scenario][m]['csp+optsvm'].append(np.mean(scores4))
+            #overall_acc[scenario][m]['csp+lr'].append(np.mean(scores3))
+            #overall_acc[scenario][m]['csp+optsvm'].append(np.mean(scores4))
             overall_acc[scenario][m]['fucone'].append(np.mean(scores5))
-            overall_acc[scenario][m]['fgmdm'].append(np.mean(scores6))
+            #overall_acc[scenario][m]['fgmdm'].append(np.mean(scores6))
 
             # Print the results
-            print(f"Classification accuracy: {np.mean(scores1):.4f} / {np.mean(scores2):.4f} / {np.mean(scores3):.4f} / {np.mean(scores4):.4f} / {np.mean(scores5):.4f} / {np.mean(scores6):.4f}, Chance level: {class_balance:.4f}")
+            #print(f"Classification accuracy: {np.mean(scores1):.4f} / {np.mean(scores2):.4f} / {np.mean(scores3):.4f} / {np.mean(scores4):.4f} / {np.mean(scores5):.4f} / {np.mean(scores6):.4f}, Chance level: {class_balance:.4f}")
             
 print("Subject: ", subjects)
 print("Session: ", sessions)
@@ -539,8 +543,11 @@ for scenario in cv_list.keys():
         fig, ax = plt.subplots(figsize=(5, 3))
         ax.boxplot(x=[overall_acc[scenario][m][algo] for m in align_methods[:]], 
                    showmeans=True, showfliers=False, vert=False)
-        ax.set_yticklabels(['mRPA-{2}', 'RPA'], fontsize=12)
+        #ax.set_yticklabels(['mRCT-{10,40}', 'mRCT-{10,40,80}', 'mRCT-{10}', 'mRCT-{40}', 'mRCT-{80}', 'RCT',
+        #                    'mRPA-{10,40}', 'mRPA-{10,40,80}', 'mRPA-{10}', 'mRPA-{40}', 'mRPA-{80}', 'RPA'], fontsize=12)
+        ax.set_yticklabels(['mRPA-{2}', 'mRPA-{3}', 'mRPA-{4}', 'mRPA-{5}', 'mRPA-{6}', 'mRPA-{7}', 'mRPA-{8}', 'RPA'], fontsize=12)
         ax.set_xlabel('Classification accuracy', fontsize=12)
         plt.grid()
-        plt.savefig(f"w_k_{scenario}_{algo}.pdf", bbox_inches='tight')
+        plt.savefig(f"Physionet_left_right_ME_w_k_{scenario}_{algo}.pdf", bbox_inches='tight')
         plt.show()
+        
