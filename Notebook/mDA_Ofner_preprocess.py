@@ -70,7 +70,7 @@ from moabb.datasets import Ofner2017
 # ====================================
 
 dataset1 = Ofner2017()
-subjects = [i for i in range(15)] # 15
+subjects = [i+1 for i in range(15)] # 15
 sessions = ["1imagination"]
 runs = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 tmin, tmax = 2., 3.
