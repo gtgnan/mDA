@@ -201,7 +201,7 @@ selected_events = {'rest': 13, 'right_elbow_extension': 14, 'right_elbow_flexion
 min_duration = tmax
 
 n_subjects = len(subjects)
-n_sessions = len(sessions)
+n_sessions = len(runs)
 n_runs = len(runs)
 
 # ========================
