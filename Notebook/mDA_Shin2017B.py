@@ -223,7 +223,7 @@ for i, sub in enumerate(subjects):
 
 #align_methods = ['rct-2+4', 'rct-2+4+8', 'rct-2', 'rct-4', 'rct-8', 'rct-20',
 #                 'rpa-2+4', 'rpa-2+4+8', 'rpa-2', 'rpa-4', 'rpa-8', 'rpa-20']
-align_methods = ['rpa-2', 'rpa-20']
+align_methods = ['rpa-2', 'rpa-3', 'rpa-4', 'rpa-5', 'rpa-6', 'rpa-7', 'rpa-8', 'rpa-20']
 
 separability_scores = ['dis', 'fis', 'sil', 'db']        
 
