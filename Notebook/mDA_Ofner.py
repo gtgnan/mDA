@@ -222,7 +222,8 @@ for i, sub in enumerate(subjects):
     
 # mDA main loop
 
-align_methods = ['rpa-28+42', 'rpa-4200'] # Use 4200 to denote full session
+align_methods = ['rpa-7', 'rpa-10', 'rpa-14', 'rpa-17', 'rpa-21', 'rpa-28+42', 'rpa-4200']
+#align_methods = ['rpa-28+42', 'rpa-4200'] # Use 4200 to denote full session
 
 separability_scores = ['dis', 'fis', 'sil', 'db']        
 
@@ -483,22 +484,22 @@ for scenario, cv in cv_list.items():
                 y = np.concatenate([all_align_label['cov'][m][s] for s in range(len(subjects))])
 
             # Use scikit-learn Pipeline with cross_val_score function
-            scores1 = cross_val_score(clf1, X1, y, cv=cv, n_jobs=1)
+            #scores1 = cross_val_score(clf1, X1, y, cv=cv, n_jobs=1)
             scores2 = cross_val_score(clf2, X1, y, cv=cv, n_jobs=1)
-            scores3 = cross_val_score(clf3, X1, y, cv=cv, n_jobs=1)
-            scores4 = cross_val_score(clf4, X1, y, cv=cv, n_jobs=1)
+            #scores3 = cross_val_score(clf3, X1, y, cv=cv, n_jobs=1)
+            #scores4 = cross_val_score(clf4, X1, y, cv=cv, n_jobs=1)
             scores5 = ensemble_cross_val_score(clf5, ppl_fc, X1, X2, y, cv)
-            scores6 = cross_val_score(clf6, X1, y, cv=cv, n_jobs=1)
+            #scores6 = cross_val_score(clf6, X1, y, cv=cv, n_jobs=1)
 
-            overall_acc[scenario][m]['mdm'].append(np.mean(scores1))
+            #overall_acc[scenario][m]['mdm'].append(np.mean(scores1))
             overall_acc[scenario][m]['tslr'].append(np.mean(scores2))
-            overall_acc[scenario][m]['csp+lr'].append(np.mean(scores3))
-            overall_acc[scenario][m]['csp+optsvm'].append(np.mean(scores4))
+            #overall_acc[scenario][m]['csp+lr'].append(np.mean(scores3))
+            #overall_acc[scenario][m]['csp+optsvm'].append(np.mean(scores4))
             overall_acc[scenario][m]['fucone'].append(np.mean(scores5))
-            overall_acc[scenario][m]['fgmdm'].append(np.mean(scores6))
+            #overall_acc[scenario][m]['fgmdm'].append(np.mean(scores6))
 
             # Print the results
-            print(f"Classification accuracy: {np.mean(scores1):.4f} / {np.mean(scores2):.4f} / {np.mean(scores3):.4f} / {np.mean(scores4):.4f} / {np.mean(scores5):.4f} / {np.mean(scores6):.4f}, Chance level: {class_balance:.4f}")
+            #print(f"Classification accuracy: {np.mean(scores1):.4f} / {np.mean(scores2):.4f} / {np.mean(scores3):.4f} / {np.mean(scores4):.4f} / {np.mean(scores5):.4f} / {np.mean(scores6):.4f}, Chance level: {class_balance:.4f}")
             
 print("Subject: ", subjects)
 print("Session: ", sessions)
@@ -519,7 +520,8 @@ for scenario in cv_list.keys():
                    showmeans=True, showfliers=False, vert=False)
         #ax.set_yticklabels(['mRCT-{10,40}', 'mRCT-{10,40,80}', 'mRCT-{10}', 'mRCT-{40}', 'mRCT-{80}', 'RCT',
         #                    'mRPA-{10,40}', 'mRPA-{10,40,80}', 'mRPA-{10}', 'mRPA-{40}', 'mRPA-{80}', 'RPA'], fontsize=12)
-        ax.set_yticklabels(['mRPA-{28,42}', 'RPA'], fontsize=12)
+        #ax.set_yticklabels(['mRPA-{28,42}', 'RPA'], fontsize=12)
+        ax.set_yticklabels(['mRPA-{7}', 'mRPA-{10}', 'mRPA-{14}', 'mRPA-{17}', 'mRPA-{21}', 'mRPA-{28,42}', 'RPA'], fontsize=12)
         ax.set_xlabel('Classification accuracy', fontsize=12)
         plt.grid()
         plt.savefig(f"w_k_{scenario}_{algo}.pdf", bbox_inches='tight')
