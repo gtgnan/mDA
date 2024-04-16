@@ -222,7 +222,7 @@ for i, sub in enumerate(subjects):
     
 # mDA main loop
 
-align_methods = ['rpa-28+42', 'rpa-420']
+align_methods = ['rpa-28+42', 'rpa-4200'] # Use 4200 to denote full session
 
 separability_scores = ['dis', 'fis', 'sil', 'db']        
 
@@ -343,6 +343,9 @@ for i, subject in enumerate(subjects):
             
                 for c in np.unique(session_cluster):
                     index = np.where(session_cluster == c)[0]
+                    
+                    if window == 4200:
+                        window = len(index)
 
                     step = int(np.round(len(index) / window - 0.01))
                     for start in range(step):
